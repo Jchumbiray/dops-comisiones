@@ -1,16 +1,27 @@
-# Jenkins local para el CI/CD. Variables en el archivo .env (no se versiona).
+# Jenkins + Azurite (emulador oficial de Azure Blob Storage / Data Lake). Variables en .env (no se versiona).
 services:
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    container_name: azurite-comisiones
+    command: azurite-blob --blobHost 0.0.0.0 --skipApiVersionCheck --loose
+    ports: ["10000:10000"]
+    volumes:
+      - azurite_data:/data
   jenkins:
     build: ./jenkins
     container_name: jenkins-comisiones
     ports: ["8090:8080"]
+    depends_on: [azurite]
     environment:
       JENKINS_ADMIN_PASSWORD: ${JENKINS_ADMIN_PASSWORD}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       REPO_URL: ${REPO_URL}
+      # Cuenta de desarrollo de Azurite (clave publica y documentada por Microsoft). En Azure real iria como credencial de Jenkins.
+      AZURE_STORAGE_CONNECTION_STRING: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;"
     volumes:
       - jenkins_home:/var/jenkins_home
       - ${LOCAL_REPO_MOUNT:-./.empty}:/repo:ro
 volumes:
   jenkins_home:
+  azurite_data:

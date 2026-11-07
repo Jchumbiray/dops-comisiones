@@ -50,3 +50,15 @@ def test_parquet_roundtrip(tmp_path):
     out = p.write_parquet(p.build_consolidated(csv, _db(), "202610"), tmp_path, "202610")
     back = pd.read_parquet(out)
     assert out.exists() and back.salario_total.iloc[0] == 1100
+
+
+def test_ruta_datalake_por_entorno():
+    import storage
+    assert storage.datalake_path("prod", "202610") == "prod/rrhh/empleados_salario_total_202610.parquet"
+    assert storage.datalake_path("dev", "202610").startswith("dev/")
+
+
+def test_storage_deshabilitado_sin_cadena(monkeypatch):
+    import storage
+    monkeypatch.delenv("AZURE_STORAGE_CONNECTION_STRING", raising=False)
+    assert storage.enabled() is False

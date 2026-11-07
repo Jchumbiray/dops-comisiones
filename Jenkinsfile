@@ -1,7 +1,7 @@
 pipeline {
     agent any
     triggers { pollSCM('H/2 * * * *') }   // alternativa al webhook de GitHub cuando Jenkins corre en local
-    options { timestamps(); timeout(time: 30, unit: 'MINUTES'); buildDiscarder(logRotator(numToKeepStr: '10')) }
+    options { timestamps(); timeout(time: 3, unit: 'HOURS'); buildDiscarder(logRotator(numToKeepStr: '10')) }
     environment {
         DB_HOST = 'mgg.vps.webdock.cloud'
         DB_PORT = '5432'

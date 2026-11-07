@@ -1,0 +1,34 @@
+jenkins:
+  systemMessage: "Jenkins - Proyecto DataOps Comisiones"
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: "admin"
+          password: "${JENKINS_ADMIN_PASSWORD}"
+  authorizationStrategy: loggedInUsersCanDoAnything
+credentials:
+  system:
+    domainCredentials:
+      - credentials:
+          - usernamePassword:
+              scope: GLOBAL
+              id: "dmc-db"
+              username: "${DB_USER}"
+              password: "${DB_PASSWORD}"
+              description: "Usuario de solo lectura PostgreSQL (DMC)"
+jobs:
+  - script: >
+      pipelineJob('pipeline-comisiones') {
+        definition {
+          cpsScm {
+            scm {
+              git {
+                remote { url('${REPO_URL}') }
+                branch('*/main')
+              }
+            }
+            scriptPath('Jenkinsfile')
+          }
+        }
+      }

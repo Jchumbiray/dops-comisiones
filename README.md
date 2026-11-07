@@ -42,7 +42,7 @@ python scripts/validate_output.py dev
 ## Despliegue CI/CD con Jenkins
 
 1. Copiar `.env.example` a `.env` y completar `DB_PASSWORD`, `JENKINS_ADMIN_PASSWORD` y `REPO_URL`.
-2. `docker compose up -d --build` → Jenkins en http://localhost:8080 (usuario `admin`).
+2. `docker compose up -d --build` → Jenkins en http://localhost:8090 (usuario `admin`).
    El usuario/clave de la BD se registran como credencial `dmc-db` y el job `pipeline-comisiones` se crea automáticamente.
 3. Ejecutar **Build Now** (o hacer `git push`: el pipeline consulta el repo cada 2 min con `pollSCM`).
 4. Etapas: `CI Preparar entorno → CI Pruebas unitarias → CD DEV (automático) → Aprobación TEST → CD TEST → Aprobación PROD → CD PROD`.

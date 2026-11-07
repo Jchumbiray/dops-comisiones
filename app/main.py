@@ -3,9 +3,11 @@ Credenciales por variables de entorno (DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PA
 import argparse, logging, os, sys
 from pathlib import Path
 import pipeline as p
+import storage
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger("comisiones")
+logging.getLogger("azure").setLevel(logging.WARNING)  # silenciar el log HTTP del SDK
 
 
 def db_config() -> dict:
@@ -26,6 +28,10 @@ def main() -> None:
 
     periodo = p.periodo_from_filename(a.csv)
     log.info("Entorno=%s periodo=%s", a.env, periodo)
+    if storage.enabled():  # el CSV se lee desde Azure Blob Storage
+        csv_name = Path(a.csv).name
+        a.csv = str(storage.download_file(storage.LANDING, csv_name, Path(a.out) / "_landing" / csv_name))
+        log.info("CSV descargado de blob %s/%s", storage.LANDING, csv_name)
     csv_df = p.read_commission_csv(a.csv)
     log.info("CSV leido: %d filas", len(csv_df))
     db_df = p.read_empleados(db_config())
@@ -34,6 +40,10 @@ def main() -> None:
         log.warning("empleado_id %s esta en el CSV pero no en la BD (excluido)", i)
     result = p.build_consolidated(csv_df, db_df, periodo)
     out = p.write_parquet(result, Path(a.out) / a.env, periodo)
+    if storage.enabled():  # el Parquet se escribe tambien en el Data Lake
+        blob = storage.datalake_path(a.env, periodo)
+        storage.upload_file(storage.DATALAKE, blob, out)
+        log.info("Parquet cargado en Data Lake: %s/%s", storage.DATALAKE, blob)
     log.info("Parquet generado: %s (%d filas, salario_total suma=%.2f)", out, len(result), result["salario_total"].sum())
 
 

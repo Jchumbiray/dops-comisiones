@@ -18,6 +18,12 @@ pipeline {
             steps { sh '. .venv/bin/activate && pytest -v --junitxml=test-results.xml' }
             post { always { junit 'test-results.xml' } }
         }
+        stage('CD - Preparar Blob Storage') {
+            steps {
+                // Crea los contenedores landing/datalake y deja el CSV en Blob Storage (Azurite en local)
+                sh '. .venv/bin/activate && python scripts/seed_blob.py $CSV_FILE'
+            }
+        }
         stage('CD - Deploy DEV') {
             steps { runEnv('dev') }
         }
